@@ -358,12 +358,14 @@ function _G.Compl.completefunc(findstart, base)
 			local item = match.item
 			local client_id = match.client_id
 			local kind = vim.lsp.protocol.CompletionItemKind[item.kind] or "Unknown"
+			local term = vim.api.nvim_list_uis()[1]
 			local word
 			local overlap_word = ""
 			if
 				util.parse_snippet_body(kind, item)
 			then
-				word = item.label
+				local width = math.floor(term.width / 2)
+				word = #item.label > width and item.filterText or item.label
 			else
 				word = item.insertText or item.label
 				local str_after_cursor = line:sub(col + 1, col + vim.fn.strwidth(word))
@@ -375,9 +377,8 @@ function _G.Compl.completefunc(findstart, base)
 					end
 				end
 			end
-			local term = vim.api.nvim_list_uis()[1]
-			local width = math.floor(term.width / 3)
-			local abbr = #item.label > width and item.label:sub(0, width).."..." or item.label
+			local abbr_width = math.floor(term.width / 3)
+			local abbr = #item.label > abbr_width and item.label:sub(0, abbr_width).."..." or item.label
 			return {
 				word = word,
 				equal = 1, -- we will do the filtering ourselves
