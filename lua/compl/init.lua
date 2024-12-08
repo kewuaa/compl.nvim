@@ -61,15 +61,15 @@ function M.setup(opts)
 	-- apply and validate settings
 	M._opts = vim.tbl_deep_extend("force", M._opts, opts or {})
 	vim.validate {
-		["completion"] = { M._opts.completion, "t" },
-		["completion.timeout"] = { M._opts.completion.timeout, "n" },
-		["completion.fuzzy"] = { M._opts.completion.fuzzy, "b" },
-		["info"] = { M._opts.info, "t" },
-		["info.enable"] = { M._opts.info.enable, "b" },
-		["info.timeout"] = { M._opts.info.timeout, "n" },
-		["snippet"] = { M._opts.snippet, "t" },
-		["snippet.enable"] = { M._opts.snippet.enable, "b" },
-		["snippet.paths"] = { M._opts.snippet.paths, "t" },
+		["completion"] = { M._opts.completion, "table" },
+		["completion.timeout"] = { M._opts.completion.timeout, "number" },
+		["completion.fuzzy"] = { M._opts.completion.fuzzy, "boolean" },
+		["info"] = { M._opts.info, "table" },
+		["info.enable"] = { M._opts.info.enable, "boolean" },
+		["info.timeout"] = { M._opts.info.timeout, "number" },
+		["snippet"] = { M._opts.snippet, "table" },
+		["snippet.enable"] = { M._opts.snippet.enable, "boolean" },
+		["snippet.paths"] = { M._opts.snippet.paths, "table" },
 	}
 
 	local group = vim.api.nvim_create_augroup("Compl", { clear = true })
