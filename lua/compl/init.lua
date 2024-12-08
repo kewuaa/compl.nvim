@@ -250,7 +250,7 @@ function _G.Compl.completefunc(findstart, base)
 				if M._opts.completion.fuzzy then
 					local fuzzy = vim.fn.matchfuzzy({ text }, base)
 					if vim.startswith(text, base:sub(1, 1)) and (base == "" or next(fuzzy)) then
-						table.insert(matches, { client_id, item })
+						table.insert(matches, { client_id = client_id, item = item })
 					end
 				else
 					if vim.startswith(text, base) then
