@@ -52,6 +52,13 @@ M._snippet = {
 	items = {},
 }
 
+function M.attach_buffer(bufnr)
+	vim.bo[bufnr].completefunc = "v:lua.Compl.completefunc"
+	if M._opts.snippet then
+		M._start_snippet()
+	end
+end
+
 function M.setup(opts)
 	if vim.fn.has "nvim-0.10" ~= 1 then
 		vim.notify("compl.nvim: Requires nvim-0.10 or higher.", vim.log.levels.ERROR)
@@ -74,10 +81,10 @@ function M.setup(opts)
 
 	local group = vim.api.nvim_create_augroup("Compl", { clear = true })
 
-	vim.api.nvim_create_autocmd({ "BufEnter", "LspAttach" }, {
+	vim.api.nvim_create_autocmd({ "BufEnter" }, {
 		group = group,
 		callback = function(args)
-			vim.bo[args.buf].completefunc = "v:lua.Compl.completefunc"
+			M.attach_buffer(args.buf)
 		end,
 	})
 
@@ -111,13 +118,6 @@ function M.setup(opts)
 		vim.api.nvim_create_autocmd("CompleteChanged", {
 			group = group,
 			callback = util.debounce(M._info.timer, M._opts.info.timeout, M._start_info),
-		})
-	end
-
-	if M._opts.snippet.enable then
-		vim.api.nvim_create_autocmd("BufEnter", {
-			group = group,
-			callback = M._start_snippet,
 		})
 	end
 end
