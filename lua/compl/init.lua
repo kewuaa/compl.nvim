@@ -59,6 +59,27 @@ function M.attach_buffer(bufnr)
 	end
 end
 
+function M.accept()
+    local keys = "<C-y>"
+	local complete_info = vim.fn.complete_info()
+	if complete_info.pum_visible == 1 then
+		local idx = complete_info.selected
+		if idx == -1 then
+			keys = "<C-n>" .. keys
+		end
+		vim.schedule(function()
+			vim.api.nvim_exec_autocmds(
+				"User",
+				{
+					pattern = "ComplAccepted",
+					modeline = false,
+				}
+			)
+		end)
+	end
+    return keys
+end
+
 function M.setup(opts)
 	if vim.fn.has "nvim-0.10" ~= 1 then
 		vim.notify("compl.nvim: Requires nvim-0.10 or higher.", vim.log.levels.ERROR)
@@ -93,7 +114,8 @@ function M.setup(opts)
 		callback = util.debounce(M._completion.timer, M._opts.completion.timeout, M._start_completion),
 	})
 
-	vim.api.nvim_create_autocmd("CompleteDone", {
+	vim.api.nvim_create_autocmd("User", {
+		pattern = "ComplAccepted",
 		group = group,
 		callback = M._on_completedone,
 	})
