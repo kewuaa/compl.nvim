@@ -250,7 +250,7 @@ function _G.Compl.completefunc(findstart, base)
 				if M._opts.completion.fuzzy then
 					local fuzzy = vim.fn.matchfuzzy({ text }, base)
 					if vim.startswith(text, base:sub(1, 1)) and (base == "" or next(fuzzy)) then
-						table.insert(matches, { client_id, item })
+						table.insert(matches, { client_id = client_id, item = item })
 					end
 				else
 					if vim.startswith(text, base) then
@@ -385,15 +385,16 @@ function M._start_info()
 	if completion_item.documentation then
 		M._open_info_window(completion_item)
 	else
-		local ok, request_id = client.request("completionItem/resolve", completion_item, function(err, result)
+		local ok, request_id = client:request("completionItem/resolve", completion_item, function(err, result)
 			if not err and result.documentation then
 				M._open_info_window(result)
 			end
 		end)
 		if ok then
+			assert(request_id)
 			local cancel_fn = function()
 				if client then
-					client.cancel_request(request_id)
+					client:cancel_request(request_id)
 				end
 			end
 			table.insert(M._ctx.pending_requests, cancel_fn)
@@ -509,16 +510,17 @@ function M._on_completedone()
 		-- 1. Insert newline(s) right after completing an item without exiting insert mode.
 		-- 2. Undo changes.
 		-- Result: Completed item is not removed without the undo changes.
-		local ok, request_id = client.request("completionItem/resolve", completion_item, function(err, result)
+		local ok, request_id = client:request("completionItem/resolve", completion_item, function(err, result)
 			edits = (not err) and (result.additionalTextEdits or {}) or {}
 			if next(edits) then
 				vim.lsp.util.apply_text_edits(edits, bufnr, client.offset_encoding)
 			end
 		end)
 		if ok then
+			assert(request_id)
 			local cancel_fn = function()
 				if client then
-					client.cancel_request(request_id)
+					client:cancel_request(request_id)
 				end
 			end
 			table.insert(M._ctx.pending_requests, cancel_fn)
