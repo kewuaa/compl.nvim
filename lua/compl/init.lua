@@ -361,12 +361,11 @@ function _G.Compl.completefunc(findstart, base)
 			local word
 			local overlap_word = ""
 			if
-				kind:match("Snippet")
-				or item.insertTextFormat == vim.lsp.protocol.InsertTextFormat.Snippet
+				util.parse_snippet_body(kind, item)
 			then
 				word = item.label
 			else
-				word = item.insertText
+				word = item.insertText or item.label
 				local str_after_cursor = line:sub(col + 1, col + vim.fn.strwidth(word))
 				for i=1,#word do
 					if word:sub(-i) == str_after_cursor:sub(1, i) then
@@ -530,19 +529,7 @@ function M._on_completedone()
 	end
 
 	-- Expand snippets
-	local snip_body = (function()
-		local snip_body
-		if
-			kind:match("Snippet")
-			or completion_item.insertTextFormat == vim.lsp.protocol.InsertTextFormat.Snippet
-		then
-			local new_text = vim.tbl_get(completion_item, "textEdit", "newText")
-			local insert_text = completion_item.insertText
-			snip_body = (new_text and new_text:find("%$") and new_text)
-				or (insert_text and insert_text:find("%$") and insert_text)
-		end
-		return snip_body
-	end)()
+	local snip_body = util.parse_snippet_body(kind, completion_item)
 	if snip_body then
 		pcall(vim.api.nvim_buf_set_text, bufnr, row - 1, col - vim.fn.strwidth(completed_word), row - 1, col, { "" })
 		pcall(vim.api.nvim_win_set_cursor, winnr, { row, col - vim.fn.strwidth(completed_word) })
