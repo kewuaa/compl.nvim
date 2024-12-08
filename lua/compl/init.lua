@@ -337,7 +337,7 @@ function _G.Compl.completefunc(findstart, base)
 			local client_id = match.client_id
 			local kind = vim.lsp.protocol.CompletionItemKind[item.kind] or "Unknown"
 			local word
-			if kind == "Snippet" then
+			if kind:match("Snippet") then
 				word = item.label or ""
 			else
 				word = vim.tbl_get(item, "textEdit", "newText") or item.insertText or item.label or ""
