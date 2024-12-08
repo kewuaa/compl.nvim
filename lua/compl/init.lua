@@ -539,6 +539,21 @@ function M._on_completedone()
 			table.insert(M._ctx.pending_requests, cancel_fn)
 		end
 	end
+
+	-- Automatically add brackets
+	if kind:match("Function") or kind:match("Method") then
+		local prev_char = vim.api.nvim_buf_get_text(0, row - 1, col - 1, row - 1, col, {})[1]
+		if prev_char ~= "(" and prev_char ~= ")" then
+			vim.api.nvim_feedkeys(
+				vim.api.nvim_replace_termcodes(
+					"()<left>",
+					true,
+					false,
+					true
+				), "i", false
+			)
+		end
+	end
 end
 
 function M._start_snippet()
