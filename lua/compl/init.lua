@@ -359,17 +359,31 @@ function _G.Compl.completefunc(findstart, base)
 			local client_id = match.client_id
 			local kind = vim.lsp.protocol.CompletionItemKind[item.kind] or "Unknown"
 			local word
-			if kind:match("Snippet") then
-				word = item.label or ""
+			local overlap_word = ""
+			if
+				kind:match("Snippet")
+				or item.insertTextFormat == vim.lsp.protocol.InsertTextFormat.Snippet
+			then
+				word = item.label
 			else
-				word = vim.tbl_get(item, "textEdit", "newText") or item.insertText or item.label or ""
+				word = item.insertText
+				local str_after_cursor = line:sub(col + 1, col + vim.fn.strwidth(word))
+				for i=1,#word do
+					if word:sub(-i) == str_after_cursor:sub(1, i) then
+						word = word:sub(1, #word-i)
+						overlap_word = word:sub(-i)
+						break
+					end
+				end
 			end
-			local word_to_be_replaced = line:sub(col + 1, col + vim.fn.strwidth(word))
-			local replace = word_to_be_replaced == word
+			local term = vim.api.nvim_list_uis()[1]
+			local width = math.floor(term.width / 3)
+			local abbr = #item.label > width and item.label:sub(0, width).."..." or item.label
 			return {
-				word = replace and "" or word,
+				word = word,
 				equal = 1, -- we will do the filtering ourselves
-				abbr = item.label,
+				abbr = abbr,
+				menu = item.menu,
 				kind = kind,
 				icase = 1,
 				dup = 1,
@@ -379,7 +393,7 @@ function _G.Compl.completefunc(findstart, base)
 						lsp = {
 							completion_item = item,
 							client_id = client_id,
-							replace = replace and word or "",
+							overlap_word = overlap_word,
 						},
 					},
 				},
@@ -509,10 +523,10 @@ function M._on_completedone()
 	local completed_word = vim.v.completed_item.word or ""
 	local kind = vim.lsp.protocol.CompletionItemKind[completion_item.kind] or "Unknown"
 
-	-- No words were inserted since it is a duplicate, so set cursor to end of duplicate word
-	if completed_word == "" then
-		local replace = vim.tbl_get(lsp_data, "replace") or ""
-		pcall(vim.api.nvim_win_set_cursor, winnr, { row, col + vim.fn.strwidth(replace) })
+	-- has overlap word, so set cursor to end of duplicate word
+	local overlap_word = vim.tbl_get(lsp_data, "overlap_word")
+	if overlap_word then
+		pcall(vim.api.nvim_win_set_cursor, winnr, { row, col + vim.fn.strwidth(overlap_word) })
 	end
 
 	-- Expand snippets
