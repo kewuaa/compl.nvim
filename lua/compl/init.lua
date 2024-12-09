@@ -7,7 +7,10 @@ _G.Compl = {}
 M._opts = {
 	completion = {
 		timeout = 100,
-		fuzzy = false,
+		fuzzy = {
+			enable = false,
+			max_item_num = 100
+		},
 	},
 	info = {
 		enable = true,
@@ -84,7 +87,9 @@ function M.setup(opts)
 	vim.validate {
 		["completion"] = { M._opts.completion, "table" },
 		["completion.timeout"] = { M._opts.completion.timeout, "number" },
-		["completion.fuzzy"] = { M._opts.completion.fuzzy, "boolean" },
+		["completion.fuzzy"] = { M._opts.completion.fuzzy, "table" },
+		["completion.fuzzy.enable"] = { M._opts.completion.fuzzy.enable, "boolean" },
+		["completion.fuzzy.max_item_num"] = { M._opts.completion.fuzzy.max_item_num, "number" },
 		["info"] = { M._opts.info, "table" },
 		["info.enable"] = { M._opts.info.enable, "boolean" },
 		["info.timeout"] = { M._opts.info.timeout, "number" },
@@ -272,7 +277,7 @@ function _G.Compl.completefunc(findstart, base)
 		if M._opts.completion.fuzzy then
 			---@diagnostic disable-next-line: param-type-mismatch
 			local matched_items, _, score = unpack(vim.fn.matchfuzzypos(items, base, {
-				limit = 50,
+				limit = M._opts.completion.fuzzy.max_item_num,
 				text_cb = function(item)
 					return item.filterText or item.label
 				end
