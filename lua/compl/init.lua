@@ -271,21 +271,38 @@ function _G.Compl.completefunc(findstart, base)
 		if not response.err and response.result then
 			local items = response.result.items or response.result or {}
 
-			for _, item in pairs(items) do
-				local text = item.filterText
-					or (vim.tbl_get(item, "textEdit", "newText") or item.insertText or item.label or "")
-				if M._opts.completion.fuzzy then
-					local fuzzy = vim.fn.matchfuzzy({ text }, base)
-					if vim.startswith(text, base:sub(1, 1)) and (base == "" or next(fuzzy)) then
-						table.insert(matches, { client_id = client_id, item = item })
+			if M._opts.completion.fuzzy then
+				---@diagnostic disable-next-line: param-type-mismatch
+				local matched_items, _, score = unpack(vim.fn.matchfuzzypos(items, base, {
+					limit = 50,
+					text_cb = function(item)
+						return item.filterText or item.label
 					end
-				else
-					if vim.startswith(text, base) then
-						table.insert(matches, { client_id = client_id, item = item })
-					end
+				}))
+				for i, item in pairs(matched_items) do
+					item.match_score = score[i]
+					table.insert(matches, { client_id = client_id, item = item })
 				end
-				-- Add an extra custom field to mark exact matches
-				item.exact = text == base
+			else
+				local matched_items = vim.tbl_filter(
+					function(item)
+						local text = item.filterText or item.label
+						if #text < #base then
+							return false
+						end
+						for i=1,#base do
+							if base:sub(i, i+1) ~= text:sub(i, i+1) then
+								item.match_score = i - 1
+								break
+							end
+						end
+						return item.match_score and item.match_score > 0 or false
+					end,
+					items
+				)
+				for _, item in pairs(matched_items) do
+					table.insert(matches, { client_id = client_id, item = item })
+				end
 			end
 		end
 	end
@@ -296,9 +313,9 @@ function _G.Compl.completefunc(findstart, base)
 	table.sort(matches, function(a, b)
 		a, b = a.item, b.item
 
-		-- Sort by exact matches
-		if a.exact ~= b.exact then
-			return a.exact or false -- nil should return false
+		-- Sort by match score
+		if a.match_score ~= b.match_score then
+			return a.match_score > b.match_score
 		end
 
 		-- Sort by ordinal value of 'kind'.
