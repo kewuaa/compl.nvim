@@ -1,4 +1,13 @@
 local M = {}
+-- cache kind_map because vim.lsp.CompletionItemKind may be changed(such as MiniIcons.tweak_lsp_kind)
+local kind_map = {}
+for k, v in pairs(vim.lsp.protocol.CompletionItemKind) do
+    if type(k) == 'string' and type(v) == 'number' then kind_map[v] = k end
+end
+
+function M.get_kind(kind)
+	return kind_map[kind] or "Unknown"
+end
 
 -- https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua#L21
 M.sep = (function()
