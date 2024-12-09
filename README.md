@@ -4,7 +4,7 @@ A minimal and **dependency-free** auto-completion plugin built on top of Vim's i
 ## Features
 - **Asynchronous completion** with customizable debounce for fast, responsive suggestions.
 - **Native snippet expansion** integration with Neovim’s built-in snippet system.
-- Support for **VS Code style custom snippets** by [internally running a minimal LSP server](#using-vs-code-style-custom-snippets), seamlessly integrating snippet items into the existing completion workflow.
+- Support for **VS Code style custom snippets**.
 - Ability to apply **additional text edits** (e.g., auto-imports) during completion.
 - **Rich documentation** in an info window for better context and understanding.
 - **Zero flicker** when refreshing the completion list, ensuring a smooth and seamless experience.
@@ -94,7 +94,6 @@ end, { expr = true })
 ```
 
 ## Using VS Code style custom snippets
-You can seamlessly integrate custom snippets into your existing completion workflow without any additional dependencies. Snippets from the specified paths are parsed and formatted into appropriate LSP responses, and are passed into a lightweight internal LSP server, which then returns them as completion items when Neovim's LSP client sends a `textDocument/completion` request.
 
 ### Example: Using Friendly Snippets
 To use a collection of snippets such as those provided in [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets), install it as a dependency and point to the location of its `package.json` manifest file. Here's how to configure it using `lazy.nvim`:
