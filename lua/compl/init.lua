@@ -169,7 +169,7 @@ function M._start_completion()
 		-- Cursor is at the beginning
 		or col == 0
 		-- Char before cursor is a whitespace
-		or vim.fn.match(before_char, "\\s") ~= -1
+		or (before_char == " " or before_char == "\t")
 		-- Context didn't change
 		or vim.deep_equal(M._ctx.cursor, { row, col })
 	then
@@ -226,11 +226,6 @@ function M._start_completion()
 end
 
 function _G.Compl.completefunc(findstart, base)
-    -- return {} when base is empty
-    if findstart == 0 and base == "" then
-        return {}
-    end
-
 	local line = vim.api.nvim_get_current_line()
 	local winnr = vim.api.nvim_get_current_win()
 	local _, col = unpack(vim.api.nvim_win_get_cursor(winnr))
@@ -274,6 +269,15 @@ function _G.Compl.completefunc(findstart, base)
 	-- Process and find completion words
 	local matches = {}
 	local completion_match = function(client_id, items)
+		-- if base empty, accept all items, set match_score ot 0
+		if base == "" then
+			for _, item in pairs(items) do
+				item.match_score = 0
+				table.insert(matches, { client_id = client_id, item = item })
+			end
+			return
+		end
+
 		if M._opts.completion.fuzzy then
 			---@diagnostic disable-next-line: param-type-mismatch
 			local matched_items, _, score = unpack(vim.fn.matchfuzzypos(items, base, {
@@ -317,7 +321,7 @@ function _G.Compl.completefunc(findstart, base)
 		end
 	end
 	-- if snippet enabled, load snippets
-	if M._opts.snippet.enable and M._opts.snippet.paths then
+	if M._opts.snippet.enable and M._opts.snippet.paths and base ~= "" then
 		local items = snippet.load_vscode_snippet(
 			M._opts.snippet.paths,
 			vim.bo.filetype
