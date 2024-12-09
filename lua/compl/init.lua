@@ -401,12 +401,11 @@ function _G.Compl.completefunc(findstart, base)
 			-- not use cached kind_map
 			local kind = vim.lsp.protocol.CompletionItemKind[item.kind] or "Unknown"
 			local kind_hlgroup = util.get_hl(item.kind)
-			local right_space = vim.o.columns - col
 			local word
 			local overlap_word = ""
 			local snip_body = snippet.parse_body(item)
 			if snip_body then
-				local word_width = math.floor(right_space / 2)
+				local word_width = math.floor((vim.api.nvim_win_get_width(0) - col) / 2)
 				if snip_body:find("%$") then
 					word = #item.label > word_width and item.filterText or item.label
 				else
@@ -423,7 +422,7 @@ function _G.Compl.completefunc(findstart, base)
 					end
 				end
 			end
-			local abbr_width = math.floor(right_space / 3)
+			local abbr_width = math.floor((vim.o.columns - col) / 3)
 			local abbr = #item.label > abbr_width and item.label:sub(0, abbr_width).."..." or item.label
 			return {
 				word = word,
