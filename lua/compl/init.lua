@@ -1,4 +1,5 @@
 local util = require "compl.util"
+local snippet = require "compl.snip"
 
 local M = {}
 _G.Compl = {}
@@ -387,7 +388,7 @@ function _G.Compl.completefunc(findstart, base)
 			local word
 			local overlap_word = ""
 			if
-				util.parse_snippet_body(kind, item)
+				snippet.parse_body(kind, item)
 			then
 				local width = math.floor(term.width / 2)
 				word = #item.label > width and item.filterText or item.label
@@ -555,7 +556,7 @@ function M._on_completedone()
 	end
 
 	-- Expand snippets
-	local snip_body = util.parse_snippet_body(kind, completion_item)
+	local snip_body = snippet.parse_body(kind, completion_item)
 	if snip_body then
 		pcall(vim.api.nvim_buf_set_text, bufnr, row - 1, col - vim.fn.strwidth(completed_word), row - 1, col, { "" })
 		pcall(vim.api.nvim_win_set_cursor, winnr, { row, col - vim.fn.strwidth(completed_word) })
