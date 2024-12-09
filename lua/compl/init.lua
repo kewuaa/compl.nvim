@@ -387,7 +387,7 @@ function _G.Compl.completefunc(findstart, base)
 			end
 			return #a.label < #b.label
 		end
-		return true
+		return false
 	end)
 
 	return vim.iter(ipairs(matches))
