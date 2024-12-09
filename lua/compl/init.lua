@@ -468,7 +468,7 @@ function M._start_info()
 		M._open_info_window(completion_item)
 	else
 		local ok, request_id = client:request("completionItem/resolve", completion_item, function(err, result)
-			if not err and result.documentation then
+			if not err and result and result.documentation then
 				M._open_info_window(result)
 			end
 		end)
@@ -596,7 +596,7 @@ function M._on_completedone()
 		-- 2. Undo changes.
 		-- Result: Completed item is not removed without the undo changes.
 		local ok, request_id = client:request("completionItem/resolve", completion_item, function(err, result)
-			edits = (not err) and (result.additionalTextEdits or {}) or {}
+			edits = (not err) and (result and result.additionalTextEdits or {}) or {}
 			if next(edits) then
 				vim.lsp.util.apply_text_edits(edits, bufnr, client.offset_encoding)
 			end
