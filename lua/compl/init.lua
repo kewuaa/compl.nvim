@@ -340,18 +340,18 @@ function _G.Compl.completefunc(findstart, base)
 			if not b.kind then
 				return true
 			end
-			local a_kind = vim.lsp.protocol.CompletionItemKind[a.kind]
-			local b_kind = vim.lsp.protocol.CompletionItemKind[b.kind]
-			if a_kind:match("Snippet") then
+			local a_kind = util.get_kind(a.kind)
+			local b_kind = util.get_kind(b.kind)
+			if a_kind == "Snippet" then
 				return true
 			end
-			if b_kind:match("Snippet") then
+			if b_kind == "Snippet" then
 				return false
 			end
-			if a_kind:match("Text") then
+			if a_kind == "Text" then
 				return false
 			end
-			if b_kind:match("Text") then
+			if b_kind == "Text" then
 				return true
 			end
 			local diff = a.kind - b.kind
@@ -395,12 +395,13 @@ function _G.Compl.completefunc(findstart, base)
 		:map(function(_, match)
 			local item = match.item
 			local client_id = match.client_id
+			-- not use cached kind_map
 			local kind = vim.lsp.protocol.CompletionItemKind[item.kind] or "Unknown"
 			local term = vim.api.nvim_list_uis()[1]
 			local word
 			local overlap_word = ""
 			if
-				snippet.parse_body(kind, item)
+				snippet.parse_body(item)
 			then
 				local width = math.floor(term.width / 2)
 				word = #item.label > width and item.filterText or item.label
@@ -554,7 +555,7 @@ function M._on_completedone()
 	M._ctx.cursor = { row, col }
 
 	local completed_word = vim.v.completed_item.word or ""
-	local kind = vim.lsp.protocol.CompletionItemKind[completion_item.kind] or "Unknown"
+	local kind = util.get_kind(completion_item.kind)
 
 	-- has overlap word, so set cursor to end of duplicate word
 	local overlap_word = vim.tbl_get(lsp_data, "overlap_word")
@@ -563,7 +564,7 @@ function M._on_completedone()
 	end
 
 	-- Expand snippets
-	local snip_body = snippet.parse_body(kind, completion_item)
+	local snip_body = snippet.parse_body(completion_item)
 	if snip_body then
 		pcall(vim.api.nvim_buf_set_text, bufnr, row - 1, col - vim.fn.strwidth(completed_word), row - 1, col, { "" })
 		pcall(vim.api.nvim_win_set_cursor, winnr, { row, col - vim.fn.strwidth(completed_word) })
@@ -603,7 +604,7 @@ function M._on_completedone()
 	end
 
 	-- Automatically add brackets
-	if kind:match("Function") or kind:match("Method") then
+	if kind == "Function" or kind == "Method" then
 		local prev_char = vim.api.nvim_buf_get_text(0, row - 1, col - 1, row - 1, col, {})[1]
 		if not snip_body and prev_char ~= "(" and prev_char ~= ")" then
 			vim.api.nvim_feedkeys(

@@ -3,12 +3,12 @@ local cache = {}
 local util = require("compl.util")
 
 
----@param kind string completion item kind
 ---@param completion_item table
-function M.parse_body(kind, completion_item)
+function M.parse_body(completion_item)
+	local kind = util.get_kind(completion_item.kind)
 	local snip_body
 	if
-		kind:match("Snippet")
+		kind == "Snippet"
 		or completion_item.insertTextFormat == vim.lsp.protocol.InsertTextFormat.Snippet
 	then
 		local new_text = vim.tbl_get(completion_item, "textEdit", "newText")
