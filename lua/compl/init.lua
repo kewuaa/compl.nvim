@@ -404,11 +404,14 @@ function _G.Compl.completefunc(findstart, base)
 			local width = vim.api.nvim_win_get_width(0)
 			local word
 			local overlap_word = ""
-			if
-				snippet.parse_body(item)
-			then
+			local snip_body = snippet.parse_body(item)
+			if snip_body then
 				local word_width = math.floor(width / 2)
-				word = #item.label > word_width and item.filterText or item.label
+				if snip_body:find("%$") then
+					word = #item.label > word_width and item.filterText or item.label
+				else
+					word = snip_body
+				end
 			else
 				word = item.insertText or item.label
 				local str_after_cursor = line:sub(col + 1, col + vim.fn.strwidth(word))
@@ -570,7 +573,7 @@ function M._on_completedone()
 
 	-- Expand snippets
 	local snip_body = snippet.parse_body(completion_item)
-	if snip_body then
+	if snip_body and snip_body:find("%$") then
 		pcall(vim.api.nvim_buf_set_text, bufnr, row - 1, col - vim.fn.strwidth(completed_word), row - 1, col, { "" })
 		pcall(vim.api.nvim_win_set_cursor, winnr, { row, col - vim.fn.strwidth(completed_word) })
 		vim.snippet.expand(snip_body)

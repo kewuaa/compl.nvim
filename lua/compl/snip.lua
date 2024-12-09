@@ -13,8 +13,8 @@ function M.parse_body(completion_item)
 	then
 		local new_text = vim.tbl_get(completion_item, "textEdit", "newText")
 		local insert_text = completion_item.insertText
-		snip_body = (new_text and new_text:find("%$") and new_text)
-		or (insert_text and insert_text:find("%$") and insert_text)
+		snip_body = (new_text and new_text)
+			or (insert_text and insert_text)
 	end
 	return snip_body
 end
