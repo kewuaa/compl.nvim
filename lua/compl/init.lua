@@ -572,11 +572,13 @@ function M._on_completedone()
 	end
 
 	-- Expand snippets
+	local expanded = false
 	local snip_body = snippet.parse_body(completion_item)
 	if snip_body and snip_body:find("%$") then
 		pcall(vim.api.nvim_buf_set_text, bufnr, row - 1, col - vim.fn.strwidth(completed_word), row - 1, col, { "" })
 		pcall(vim.api.nvim_win_set_cursor, winnr, { row, col - vim.fn.strwidth(completed_word) })
 		vim.snippet.expand(snip_body)
+		expanded = true
 	end
 
 	local client = lsp_data.client_id and vim.lsp.get_client_by_id(lsp_data.client_id)
@@ -614,7 +616,7 @@ function M._on_completedone()
 	-- Automatically add brackets
 	if kind == "Function" or kind == "Method" then
 		local prev_char = vim.api.nvim_buf_get_text(0, row - 1, col - 1, row - 1, col, {})[1]
-		if not snip_body and prev_char ~= "(" and prev_char ~= ")" then
+		if not expanded and prev_char ~= "(" and prev_char ~= ")" then
 			vim.api.nvim_feedkeys(
 				vim.api.nvim_replace_termcodes(
 					"()<left>",
