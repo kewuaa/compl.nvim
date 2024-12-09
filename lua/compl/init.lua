@@ -48,16 +48,8 @@ M._info = {
 	end,
 }
 
-M._snippet = {
-	client_id = nil,
-	items = {},
-}
-
 function M.attach_buffer(bufnr)
 	vim.bo[bufnr].completefunc = "v:lua.Compl.completefunc"
-	if M._opts.snippet then
-		M._start_snippet()
-	end
 end
 
 function M.accept()
@@ -268,44 +260,56 @@ function _G.Compl.completefunc(findstart, base)
 
 	-- Process and find completion words
 	local matches = {}
+	local completion_match = function(client_id, items)
+		if M._opts.completion.fuzzy then
+			---@diagnostic disable-next-line: param-type-mismatch
+			local matched_items, _, score = unpack(vim.fn.matchfuzzypos(items, base, {
+				limit = 50,
+				text_cb = function(item)
+					return item.filterText or item.label
+				end
+			}))
+			for i, item in pairs(matched_items) do
+				item.match_score = score[i]
+				table.insert(matches, { client_id = client_id, item = item })
+			end
+		else
+			local matched_items = vim.tbl_filter(
+				function(item)
+					local text = item.filterText or item.label
+					if #text < #base then
+						return false
+					end
+					for i=1,#base do
+						if base:sub(i, i+1) ~= text:sub(i, i+1) then
+							item.match_score = i - 1
+							break
+						end
+					end
+					return item.match_score and item.match_score > 0 or false
+				end,
+				items
+			)
+			for _, item in pairs(matched_items) do
+				table.insert(matches, { client_id = client_id, item = item })
+			end
+		end
+	end
 	for client_id, response in pairs(M._completion.responses) do
 		if not response.err and response.result then
 			local items = response.result.items or response.result or {}
-
-			if M._opts.completion.fuzzy then
-				---@diagnostic disable-next-line: param-type-mismatch
-				local matched_items, _, score = unpack(vim.fn.matchfuzzypos(items, base, {
-					limit = 50,
-					text_cb = function(item)
-						return item.filterText or item.label
-					end
-				}))
-				for i, item in pairs(matched_items) do
-					item.match_score = score[i]
-					table.insert(matches, { client_id = client_id, item = item })
-				end
-			else
-				local matched_items = vim.tbl_filter(
-					function(item)
-						local text = item.filterText or item.label
-						if #text < #base then
-							return false
-						end
-						for i=1,#base do
-							if base:sub(i, i+1) ~= text:sub(i, i+1) then
-								item.match_score = i - 1
-								break
-							end
-						end
-						return item.match_score and item.match_score > 0 or false
-					end,
-					items
-				)
-				for _, item in pairs(matched_items) do
-					table.insert(matches, { client_id = client_id, item = item })
-				end
+			if not vim.tbl_isempty(items) then
+				completion_match(client_id, items)
 			end
 		end
+	end
+	-- if snippet enabled, load snippets
+	if M._opts.snippet.enable and M._opts.snippet.paths then
+		local items = snippet.load_vscode_snippet(
+			M._opts.snippet.paths,
+			vim.bo.filetype
+		)
+		completion_match(nil, items)
 	end
 
 	-- Sorting is done with multiple fallbacks.
@@ -534,17 +538,12 @@ function M._on_completedone()
 		return
 	end
 
-	local client = vim.lsp.get_client_by_id(lsp_data.client_id)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local winnr = vim.api.nvim_get_current_win()
 	local row, col = unpack(vim.api.nvim_win_get_cursor(winnr))
 
 	-- Update context cursor so completion is not triggered right after complete done.
 	M._ctx.cursor = { row, col }
-
-	if not client then
-		return
-	end
 
 	local completed_word = vim.v.completed_item.word or ""
 	local kind = vim.lsp.protocol.CompletionItemKind[completion_item.kind] or "Unknown"
@@ -561,6 +560,11 @@ function M._on_completedone()
 		pcall(vim.api.nvim_buf_set_text, bufnr, row - 1, col - vim.fn.strwidth(completed_word), row - 1, col, { "" })
 		pcall(vim.api.nvim_win_set_cursor, winnr, { row, col - vim.fn.strwidth(completed_word) })
 		vim.snippet.expand(snip_body)
+	end
+
+	local client = lsp_data.client_id and vim.lsp.get_client_by_id(lsp_data.client_id)
+	if not client then
+		return
 	end
 
 	-- Apply additionalTextEdits
@@ -603,107 +607,6 @@ function M._on_completedone()
 				), "i", false
 			)
 		end
-	end
-end
-
-function M._start_snippet()
-	local filetype = vim.bo.filetype
-
-	local parse_snippet_data = function(snippet_data)
-		vim.iter(pairs(snippet_data or {})):each(function(_, snippet)
-			local prefixes = type(snippet.prefix) == "table" and snippet.prefix or { snippet.prefix }
-			vim.iter(ipairs(prefixes)):each(function(_, prefix)
-				table.insert(M._snippet.items, {
-					detail = "snippet",
-					label = prefix,
-					kind = vim.lsp.protocol.CompletionItemKind["Snippet"],
-					documentation = {
-						value = snippet.description,
-						kind = vim.lsp.protocol.MarkupKind.Markdown,
-					},
-					insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet,
-					insertText = type(snippet.body) == "table" and table.concat(snippet.body, "\n") or snippet.body,
-				})
-			end)
-		end)
-	end
-
-	M._snippet.items = {}
-	vim.iter(ipairs(M._opts.snippet.paths)):each(function(_, root)
-		local manifest_path = table.concat({ root, "package.json" }, util.sep)
-		util.async_read_json(manifest_path, function(manifest_data)
-			vim.iter(ipairs((manifest_data.contributes and manifest_data.contributes.snippets) or {}))
-				:filter(function(_, s)
-					if type(s.language) == "table" then
-						return vim.iter(ipairs(s.language)):any(function(_, l)
-							return l == filetype
-						end)
-					else
-						return s.language == filetype
-					end
-				end)
-				:map(function(_, snippet_contribute)
-					return vim.fn.resolve(table.concat({ root, snippet_contribute.path }, util.sep))
-				end)
-				:each(function(snippet_path)
-					util.async_read_json(snippet_path, parse_snippet_data)
-				end)
-		end)
-	end)
-
-	M._start_snippet_server()
-end
-
-function M._start_snippet_server()
-	if M._snippet.client_id then
-		vim.lsp.stop_client(M._snippet.client_id)
-		M._snippet.client_id = nil
-	end
-
-	M._snippet.client_id = vim.lsp.start {
-		name = "compl_snippets",
-		cmd = M.make_lsp_server {
-			isIncomplete = false,
-			items = M._snippet.items,
-		},
-	}
-end
-
-function M.make_lsp_server(completion_items)
-	return function(dispatchers)
-		local closing = false
-		local srv = {}
-
-		function srv.request(method, params, callback)
-			if method == "initialize" then
-				callback(nil, {
-					capabilities = {
-						completionProvider = true, -- the server has to provide completion support (true or pass options table)
-					},
-				})
-			elseif method == "textDocument/completion" then
-				callback(nil, completion_items)
-			elseif method == "shutdown" then
-				callback(nil, nil)
-			end
-			return true, 1
-		end
-
-		function srv.notify(method, params)
-			if method == "exit" then
-				dispatchers.on_exit(0, 15)
-			end
-		end
-
-		function srv.is_closing()
-			return closing
-		end
-
-		function srv.terminate()
-			closing = true
-		end
-
-		return srv
 	end
 end
 
