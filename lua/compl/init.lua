@@ -354,12 +354,6 @@ function _G.Compl.completefunc(findstart, base)
 			if b_kind == "Text" then
 				return true
 			end
-			local diff = a.kind - b.kind
-			if diff < 0 then
-				return true
-			elseif diff > 0 then
-				return false
-			end
 		end
 
 		-- Sort by lexicographical order of 'sortText'.
