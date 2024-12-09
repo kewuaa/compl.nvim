@@ -19,7 +19,7 @@ function M.debounce(timer, timeout, callback)
 		local argv = { ... }
 		timer:start(timeout, 0, function()
 			timer:stop()
-			vim.schedule_wrap(callback)(unpack(argv))
+            callback(unpack(argv))
 		end)
 	end
 end

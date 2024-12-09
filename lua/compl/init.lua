@@ -104,7 +104,11 @@ function M.setup(opts)
 
 	vim.api.nvim_create_autocmd({ "TextChangedI", "TextChangedP" }, {
 		group = group,
-		callback = util.debounce(M._completion.timer, M._opts.completion.timeout, M._start_completion),
+		callback = util.debounce(
+			M._completion.timer,
+			M._opts.completion.timeout,
+			vim.schedule_wrap(M._start_completion)
+		),
 	})
 
 	vim.api.nvim_create_autocmd("User", {
@@ -132,7 +136,11 @@ function M.setup(opts)
 
 		vim.api.nvim_create_autocmd("CompleteChanged", {
 			group = group,
-			callback = util.debounce(M._info.timer, M._opts.info.timeout, M._start_info),
+			callback = util.debounce(
+				M._info.timer,
+				M._opts.info.timeout,
+				vim.schedule_wrap(M._start_info)
+			),
 		})
 	end
 end
