@@ -415,7 +415,7 @@ function _G.Compl.completefunc(findstart, base)
 			else
 				word = item.insertText or item.label
 				local str_after_cursor = line:sub(col + 1, col + vim.fn.strwidth(word))
-				for i=1,#word do
+				for i=1,#str_after_cursor do
 					if word:sub(-i) == str_after_cursor:sub(1, i) then
 						word = word:sub(1, #word-i)
 						overlap_word = word:sub(-i)
