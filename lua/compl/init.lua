@@ -220,6 +220,11 @@ function M._start_completion()
 end
 
 function _G.Compl.completefunc(findstart, base)
+    -- return {} when base is empty
+    if findstart == 0 and base == "" then
+        return {}
+    end
+
 	local line = vim.api.nvim_get_current_line()
 	local winnr = vim.api.nvim_get_current_win()
 	local _, col = unpack(vim.api.nvim_win_get_cursor(winnr))
