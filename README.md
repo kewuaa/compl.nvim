@@ -27,7 +27,10 @@ Focused on minimalism and performance, without the overhead of complex configura
   opts = {
     -- Default options (no need to set them again)
     completion = {
-      fuzzy = false,
+      fuzzy = {
+        enable = false,
+        max_item_num = 100,
+      },
       timeout = 100,
     },
     info = {
