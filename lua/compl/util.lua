@@ -9,6 +9,15 @@ function M.get_kind(kind)
 	return kind_map[kind] or "Unknown"
 end
 
+function M.get_hl(kind)
+	---@diagnostic disable-next-line: undefined-field
+	if not _G.MiniIcons then
+		return
+	end
+	local _, hl, is_default = _G.MiniIcons.get('lsp', M.get_kind(kind))
+	return not is_default and hl or nil
+end
+
 -- https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua#L21
 M.sep = (function()
 	if jit then

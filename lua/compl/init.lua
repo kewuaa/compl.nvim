@@ -397,6 +397,7 @@ function _G.Compl.completefunc(findstart, base)
 			local client_id = match.client_id
 			-- not use cached kind_map
 			local kind = vim.lsp.protocol.CompletionItemKind[item.kind] or "Unknown"
+			local kind_hlgroup = util.get_hl(item.kind)
 			local term = vim.api.nvim_list_uis()[1]
 			local word
 			local overlap_word = ""
@@ -424,6 +425,7 @@ function _G.Compl.completefunc(findstart, base)
 				abbr = abbr,
 				menu = item.menu,
 				kind = kind,
+				kind_hlgroup = kind_hlgroup,
 				icase = 1,
 				dup = 1,
 				empty = 1,
