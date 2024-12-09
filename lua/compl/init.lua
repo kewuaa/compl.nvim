@@ -327,16 +327,18 @@ function _G.Compl.completefunc(findstart, base)
 			if not b.kind then
 				return true
 			end
-			if vim.lsp.protocol.CompletionItemKind[a.kind] == "Snippet" then
+			local a_kind = vim.lsp.protocol.CompletionItemKind[a.kind]
+			local b_kind = vim.lsp.protocol.CompletionItemKind[b.kind]
+			if a_kind:match("Snippet") then
 				return true
 			end
-			if vim.lsp.protocol.CompletionItemKind[b.kind] == "Snippet" then
+			if b_kind:match("Snippet") then
 				return false
 			end
-			if vim.lsp.protocol.CompletionItemKind[a.kind] == "Text" then
+			if a_kind:match("Text") then
 				return false
 			end
-			if vim.lsp.protocol.CompletionItemKind[b.kind] == "Text" then
+			if b_kind:match("Text") then
 				return true
 			end
 			local diff = a.kind - b.kind
@@ -373,6 +375,7 @@ function _G.Compl.completefunc(findstart, base)
 			end
 			return #a.label < #b.label
 		end
+		return true
 	end)
 
 	return vim.iter(ipairs(matches))
