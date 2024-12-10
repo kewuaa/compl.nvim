@@ -389,16 +389,7 @@ function _G.Compl.completefunc(findstart, base)
 		end
 
 		-- Sort by length
-		if a.label ~= b.label then
-			if not a.label then
-				return false
-			end
-			if not b.label then
-				return true
-			end
-			return #a.label < #b.label
-		end
-		return false
+		return #(a.insertText or a.label) < #(b.insertText or b.label)
 	end)
 
 	return vim.iter(ipairs(matches))
