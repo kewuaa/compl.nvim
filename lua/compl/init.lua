@@ -268,6 +268,13 @@ function _G.Compl.completefunc(findstart, base)
 
 	-- Process and find completion words
 	local matches = {}
+	local node = vim.treesitter.get_node()
+	local is_comment = node and vim.tbl_contains({
+		"comment",
+		"line_comment",
+		"block_comment",
+		"comment_content",
+	}, node:type())
 	local completion_match = function(client_id, items)
 		-- if base empty, accept all items, set match_score ot 0
 		if base == "" then
@@ -321,7 +328,7 @@ function _G.Compl.completefunc(findstart, base)
 		end
 	end
 	-- if snippet enabled, load snippets
-	if M._opts.snippet.enable and M._opts.snippet.paths and base ~= "" then
+	if not is_comment and M._opts.snippet.enable and M._opts.snippet.paths and base ~= "" then
 		local items = snippet.load_vscode_snippet(
 			M._opts.snippet.paths,
 			vim.bo.filetype
