@@ -75,13 +75,8 @@ function M.async_read_json(file, callback)
 	end)
 end
 
-M.make_position_params =
-	vim.fn.has("nvim-0.11") == 1
-	and function()
-		return function(client, _)
-			return vim.lsp.util.make_position_params(0, client.offset_encoding)
-		end
-	end
-	or vim.lsp.util.make_position_params
+M.position_params = function(client, _)
+	return vim.lsp.util.make_position_params(0, client.offset_encoding)
+end
 
 return M

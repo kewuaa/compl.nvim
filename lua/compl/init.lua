@@ -77,8 +77,8 @@ function M.accept()
 end
 
 function M.setup(opts)
-	if vim.fn.has "nvim-0.10" ~= 1 then
-		vim.notify("compl.nvim: Requires nvim-0.10 or higher.", vim.log.levels.ERROR)
+	if vim.fn.has "nvim-0.11" ~= 1 then
+		vim.notify("compl.nvim: Requires nvim-0.11", vim.log.levels.ERROR)
 		return
 	end
 
@@ -180,8 +180,7 @@ function M._start_completion()
 	M._ctx.cursor = { row, col }
 
 	-- Make a request to get completion items
-	local position_params = util.make_position_params()
-	local cancel_fn = vim.lsp.buf_request_all(bufnr, "textDocument/completion", position_params, function(responses)
+	local cancel_fn = vim.lsp.buf_request_all(bufnr, "textDocument/completion", util.position_params, function(responses)
 		-- Apply itemDefaults to completion item as per the LSP specs:
 		--
 		-- "In many cases the items of an actual completion result share the same
