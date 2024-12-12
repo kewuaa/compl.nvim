@@ -341,12 +341,14 @@ function _G.Compl.completefunc(findstart, base)
 	table.sort(matches, function(a, b)
 		a, b = a.item, b.item
 
-		local _, under_count_a = (a.filterText or a.label):find("^_+")
-		local _, under_count_b = (b.filterText or b.label):find("^_+")
-		under_count_a = under_count_a or 0
-		under_count_b = under_count_b or 0
-		if under_count_a ~= under_count_b then
-			return under_count_a < under_count_b
+		if base:sub(1, 1) ~= "_" then
+			local _, under_count_a = (a.filterText or a.label):find("^_+")
+			local _, under_count_b = (b.filterText or b.label):find("^_+")
+			under_count_a = under_count_a or 0
+			under_count_b = under_count_b or 0
+			if under_count_a ~= under_count_b then
+				return under_count_a < under_count_b
+			end
 		end
 
 		-- Sort by match score
