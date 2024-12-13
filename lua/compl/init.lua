@@ -465,15 +465,15 @@ function M._start_info()
 		return
 	end
 
-	local client = vim.lsp.get_client_by_id(lsp_data.client_id)
-	if not client then
-		return
-	end
-
 	-- get resolved item only if item does not already contain documentation
 	if completion_item.documentation then
 		M._open_info_window(completion_item)
 	else
+		local client = vim.lsp.get_client_by_id(lsp_data.client_id)
+		if not client then
+			return
+		end
+
 		local ok, request_id = client:request("completionItem/resolve", completion_item, function(err, result)
 			if not err and result and result.documentation then
 				M._open_info_window(result)
