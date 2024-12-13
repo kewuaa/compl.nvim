@@ -339,8 +339,8 @@ function _G.Compl.completefunc(findstart, base)
 	-- Sorting is done with multiple fallbacks.
 	-- If it fails to find diff in each stage, it will then fallback to the next stage.
 	-- https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/config/compare.lua
-	table.sort(matches, function(a, b)
-		a, b = a.item, b.item
+	table.sort(matches, function(matcha, matchb)
+		local a, b = matcha.item, matchb.item
 
 		if base:sub(1, 1) ~= "_" then
 			local _, under_count_a = (a.filterText or a.label):find("^_+")
@@ -377,6 +377,15 @@ function _G.Compl.completefunc(findstart, base)
 			end
 			if b.kind == CompletionItemKind.Text then
 				return true
+			end
+		end
+		-- custom snippets have higher rank, nil client_id means custom snippets
+		if a.kind and a.kind == CompletionItemKind.Snippet then
+			if not matcha.client_id then
+				return true
+			end
+			if not matchb.client_id then
+				return false
 			end
 		end
 
