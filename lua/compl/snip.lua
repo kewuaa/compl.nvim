@@ -1,6 +1,7 @@
 local M = {}
-local cache = {}
 local util = require("compl.util")
+---@type table<string, table[]>
+local cache = {}
 
 
 ---@param completion_item table
@@ -68,7 +69,7 @@ end
 
 ---@param paths string[] vscode snippet paths
 ---@param filetype string filetype
----@return table[]? items snippet items
+---@return table[] items snippet items
 function M.load_vscode_snippet(paths, filetype)
     if not cache[filetype] then
         load(paths, filetype)
