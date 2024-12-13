@@ -5,16 +5,12 @@ for k, v in pairs(vim.lsp.protocol.CompletionItemKind) do
     if type(k) == 'string' and type(v) == 'number' then kind_map[v] = k end
 end
 
-function M.get_kind(kind)
-	return kind_map[kind] or "Unknown"
-end
-
 function M.get_hl(kind)
 	---@diagnostic disable-next-line: undefined-field
 	if not _G.MiniIcons then
 		return
 	end
-	local _, hl, is_default = _G.MiniIcons.get('lsp', M.get_kind(kind))
+	local _, hl, is_default = _G.MiniIcons.get('lsp', kind_map[kind] or "Unknown")
 	return not is_default and hl or nil
 end
 

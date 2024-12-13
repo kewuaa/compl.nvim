@@ -1,5 +1,6 @@
 local util = require "compl.util"
 local snippet = require "compl.snip"
+local CompletionItemKind = vim.lsp.protocol.CompletionItemKind
 
 local M = {}
 _G.Compl = {}
@@ -365,18 +366,16 @@ function _G.Compl.completefunc(findstart, base)
 			if not b.kind then
 				return true
 			end
-			local a_kind = util.get_kind(a.kind)
-			local b_kind = util.get_kind(b.kind)
-			if a_kind == "Snippet" then
+			if a.kind == CompletionItemKind.Snippet then
 				return true
 			end
-			if b_kind == "Snippet" then
+			if b.kind == CompletionItemKind.Snippet then
 				return false
 			end
-			if a_kind == "Text" then
+			if a.kind == CompletionItemKind.Text then
 				return false
 			end
-			if b_kind == "Text" then
+			if b.kind == CompletionItemKind.Text then
 				return true
 			end
 		end
@@ -406,7 +405,7 @@ function _G.Compl.completefunc(findstart, base)
 			local item = match.item
 			local client_id = match.client_id
 			-- not use cached kind_map
-			local kind = vim.lsp.protocol.CompletionItemKind[item.kind] or "Unknown"
+			local kind = CompletionItemKind[item.kind] or "Unknown"
 			local kind_hlgroup = util.get_hl(item.kind)
 			local word
 			local overlap_word = ""
@@ -569,7 +568,6 @@ function M._on_completedone()
 	M._ctx.cursor = { row, col }
 
 	local completed_word = vim.v.completed_item.word or ""
-	local kind = util.get_kind(completion_item.kind)
 
 	-- has overlap word, so set cursor to end of duplicate word
 	local overlap_word = vim.tbl_get(lsp_data, "overlap_word")
@@ -620,7 +618,10 @@ function M._on_completedone()
 	end
 
 	-- Automatically add brackets
-	if kind == "Function" or kind == "Method" then
+	if
+		completion_item.kind == CompletionItemKind.Function
+		or completion_item.kind == CompletionItemKind.Method
+	then
 		local prev_char = vim.api.nvim_buf_get_text(0, row - 1, col - 1, row - 1, col, {})[1]
 		if not expanded and prev_char ~= "(" and prev_char ~= ")" then
 			vim.api.nvim_feedkeys(

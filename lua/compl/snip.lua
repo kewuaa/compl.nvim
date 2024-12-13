@@ -5,10 +5,9 @@ local util = require("compl.util")
 
 ---@param completion_item table
 function M.parse_body(completion_item)
-	local kind = util.get_kind(completion_item.kind)
 	local snip_body
 	if
-		kind == "Snippet"
+		completion_item.kind == vim.lsp.protocol.CompletionItemKind.Snippet
 		or completion_item.insertTextFormat == vim.lsp.protocol.InsertTextFormat.Snippet
 	then
 		local new_text = vim.tbl_get(completion_item, "textEdit", "newText")
