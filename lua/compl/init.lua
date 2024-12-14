@@ -382,9 +382,10 @@ function _G.Compl.completefunc(findstart, base)
 		-- custom snippets have higher rank, nil client_id means custom snippets
 		if a.kind and a.kind == CompletionItemKind.Snippet then
 			if not matcha.client_id then
-				return true
-			end
-			if not matchb.client_id then
+				if matchb.client_id then
+					return true
+				end
+			elseif not matchb.client_id then
 				return false
 			end
 		end
