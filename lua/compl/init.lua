@@ -266,6 +266,12 @@ function _G.Compl.completefunc(findstart, base)
 		return vim.fn.match(line:sub(1, col), "\\k*$")
 	end
 
+	-- NOTE: in c/cpp file, `base` may start with "." when access fields of pointer
+	-- delete the extra "." so that items could match `base` correctly
+	if base:sub(1, 1) == "." then
+		base = base:sub(2)
+	end
+
 	-- Process and find completion words
 	local matches = {}
 	local node = vim.treesitter.get_node()
