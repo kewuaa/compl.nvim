@@ -247,6 +247,15 @@ function _G.Compl.completefunc(findstart, base)
 		--                  so we'd eliminate the `plenary.async` result
 		--
 		-- We prefer to use the language server boundary if available.
+
+		-- TODO: fix BUG
+		-- language server boundary would be wrong if contains chinese characters
+		-- so for typst, use custom boundary
+		if vim.bo.ft == "typst" then
+			local kw = line:sub(1, col):match("([%w-]*)$")
+			return kw and col - #kw or col
+		end
+
 		for _, response in pairs(M._completion.responses) do
 			if not response.err and response.result then
 				local items = response.result.items or response.result or {}
