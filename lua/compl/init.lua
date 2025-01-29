@@ -404,14 +404,15 @@ function _G.Compl.completefunc(findstart, base)
 		end
 
 		-- Sort by lexicographical order of 'sortText'.
-		if a.sortText ~= b.sortText then
-			if not a.sortText then
-				return false
-			end
-			if not b.sortText then
-				return true
-			end
-			local diff = vim.stricmp(a.sortText, b.sortText)
+		if a.sortText and not b.sortText then
+			return true
+		elseif not a.sortText and b.sortText then
+			return false
+		elseif a.sortText and b.sortText then
+			local diff = vim.stricmp(
+				a.sortText:gsub("%.?"..(a.filterText or a.label).."$", ""),
+				b.sortText:gsub("%.?"..(b.filterText or b.label).."$", "")
+			)
 			if diff < 0 then
 				return true
 			elseif diff > 0 then
