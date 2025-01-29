@@ -366,6 +366,15 @@ function _G.Compl.completefunc(findstart, base)
 		end
 
 		-- Sort by match score
+		if a.score ~= b.score then
+			if not a.score then
+				return false
+			end
+			if not b.score then
+				return true
+			end
+			return a.score > b.score
+		end
 		if a.match_score ~= b.match_score then
 			return a.match_score > b.match_score
 		end
