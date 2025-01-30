@@ -366,13 +366,7 @@ function _G.Compl.completefunc(findstart, base)
 		-- end
 
 		-- Sort by match score
-		if a.score ~= b.score then
-			if not a.score then
-				return false
-			end
-			if not b.score then
-				return true
-			end
+		if a.score and b.score and math.abs(a.score-b.score) > 1e-9 then
 			return a.score > b.score
 		end
 		if a.match_score ~= b.match_score then
