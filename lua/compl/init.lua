@@ -412,10 +412,7 @@ function _G.Compl.completefunc(findstart, base)
 		elseif not a.sortText and b.sortText then
 			return false
 		elseif a.sortText and b.sortText then
-			local diff = vim.stricmp(
-				a.sortText:gsub("%.?"..(a.filterText or a.label).."$", ""),
-				b.sortText:gsub("%.?"..(b.filterText or b.label).."$", "")
-			)
+			local diff = vim.stricmp(a.sortText, b.sortText)
 			if diff < 0 then
 				return true
 			elseif diff > 0 then
