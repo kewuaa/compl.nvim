@@ -365,18 +365,7 @@ function _G.Compl.completefunc(findstart, base)
 		-- 	return under_count_a < under_count_b
 		-- end
 
-		local start_with_base_a = vim.startswith(a.filterText or a.label, base)
-		local start_with_base_b = vim.startswith(b.filterText or b.label, base)
-		if start_with_base_a and not start_with_base_b then
-			return true
-		elseif start_with_base_b and not start_with_base_a then
-			return false
-		end
-
 		-- Sort by match score
-		if a.score and b.score and math.abs(a.score-b.score) > 1e-9 then
-			return a.score > b.score
-		end
 		if a.match_score ~= b.match_score then
 			return a.match_score > b.match_score
 		end
@@ -415,21 +404,21 @@ function _G.Compl.completefunc(findstart, base)
 		end
 
 		-- Sort by lexicographical order of 'sortText'.
-		if a.sortText and not b.sortText then
-			return true
-		elseif not a.sortText and b.sortText then
-			return false
-		elseif a.sortText and b.sortText then
-			local diff = vim.stricmp(a.sortText, b.sortText)
-			if diff < 0 then
-				return true
-			elseif diff > 0 then
-				return false
-			end
-		end
+		-- if a.sortText and not b.sortText then
+		-- 	return true
+		-- elseif not a.sortText and b.sortText then
+		-- 	return false
+		-- elseif a.sortText and b.sortText then
+		-- 	local diff = vim.stricmp(a.sortText, b.sortText)
+		-- 	if diff < 0 then
+		-- 		return true
+		-- 	elseif diff > 0 then
+		-- 		return false
+		-- 	end
+		-- end
 
 		-- Sort by length
-		return #(a.insertText or a.label) < #(b.insertText or b.label)
+		return #(a.filterText or a.label) < #(b.filterText or b.label)
 	end)
 
 	return vim.iter(ipairs(matches))
