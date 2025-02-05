@@ -365,6 +365,14 @@ function _G.Compl.completefunc(findstart, base)
 		-- 	return under_count_a < under_count_b
 		-- end
 
+		local start_with_base_a = vim.startswith(a.filterText or a.label, base)
+		local start_with_base_b = vim.startswith(b.filterText or b.label, base)
+		if start_with_base_a and not start_with_base_b then
+			return true
+		elseif start_with_base_b and not start_with_base_a then
+			return false
+		end
+
 		-- Sort by match score
 		if a.score and b.score and math.abs(a.score-b.score) > 1e-9 then
 			return a.score > b.score
