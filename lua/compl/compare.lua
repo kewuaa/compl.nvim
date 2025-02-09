@@ -3,14 +3,14 @@ local CompletionItemKind = vim.lsp.protocol.CompletionItemKind
 
 M.score = function(matcha, matchb)
     local a, b = matcha.item, matchb.item
-    local diff
-    if a.score and b.score then
-        diff = b.score * b.match_score - a.score * a.match_score
-    else
-        diff = b.match_score - a.match_score
+    if a.match_score ~= b.match_score then
+        return a.match_score > b.match_score
     end
-    if math.abs(diff) > 1e-6 then
-        return diff < 0
+    if a.score and b.score then
+        local diff = b.score - a.score
+        if math.abs(diff) > 1e-6 then
+            return diff < 0
+        end
     end
     return nil
 end
