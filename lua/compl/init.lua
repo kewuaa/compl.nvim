@@ -1,5 +1,6 @@
 local util = require "compl.util"
 local snippet = require "compl.snip"
+local compare = require "compl.compare"
 local CompletionItemKind = vim.lsp.protocol.CompletionItemKind
 
 local M = {}
@@ -12,6 +13,7 @@ M._opts = {
 			enable = false,
 			max_item_num = 100
 		},
+		comparetors = { "score", "kind", "length" }
 	},
 	info = {
 		enable = true,
@@ -91,6 +93,23 @@ function M.setup(opts)
 		["completion.fuzzy"] = { M._opts.completion.fuzzy, "table" },
 		["completion.fuzzy.enable"] = { M._opts.completion.fuzzy.enable, "boolean" },
 		["completion.fuzzy.max_item_num"] = { M._opts.completion.fuzzy.max_item_num, "number" },
+		["completion.comparetor"] = { M._opts.completion.comparetors, function(comparetors)
+			if type(comparetors) ~= "table" then
+				return false
+			end
+			for _, comparetor in ipairs(comparetors) do
+				if type(comparetor) == "string" then
+					if not compare[comparetor] then
+						vim.notify(("invalid comparetor `%s`"):format(comparetor), vim.log.levels.WARN)
+					elseif type(compare[comparetor]) ~= "function" then
+						return false
+					end
+				elseif type(comparetor) ~= "function" then
+					return false
+				end
+			end
+		    return true
+		end, "completion item comparetors" },
 		["info"] = { M._opts.info, "table" },
 		["info.enable"] = { M._opts.info.enable, "boolean" },
 		["info.timeout"] = { M._opts.info.timeout, "number" },
@@ -355,70 +374,18 @@ function _G.Compl.completefunc(findstart, base)
 	-- If it fails to find diff in each stage, it will then fallback to the next stage.
 	-- https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/config/compare.lua
 	table.sort(matches, function(matcha, matchb)
-		local a, b = matcha.item, matchb.item
-
-		-- local _, under_count_a = (a.filterText or a.label):find("^_+")
-		-- local _, under_count_b = (b.filterText or b.label):find("^_+")
-		-- under_count_a = under_count_a or 0
-		-- under_count_b = under_count_b or 0
-		-- if under_count_a ~= under_count_b then
-		-- 	return under_count_a < under_count_b
-		-- end
-
-		-- Sort by match score
-		if a.match_score ~= b.match_score then
-			return a.match_score > b.match_score
-		end
-
-		-- Sort by ordinal value of 'kind'.
-		-- Exceptions: 'Snippet' are ranked highest, and 'Text' are ranked lowest
-		if a.kind ~= b.kind then
-			if not a.kind then
-				return false
+		for _, comparetor in ipairs(M._opts.completion.comparetors) do
+			local res
+			if type(comparetor) == "function" then
+				res = comparetor(matcha, matchb)
+			elseif compare[comparetor] then
+				res = compare[comparetor](matcha, matchb)
 			end
-			if not b.kind then
-				return true
-			end
-			if a.kind == CompletionItemKind.Snippet then
-				return true
-			end
-			if b.kind == CompletionItemKind.Snippet then
-				return false
-			end
-			if a.kind == CompletionItemKind.Text then
-				return false
-			end
-			if b.kind == CompletionItemKind.Text then
-				return true
+			if res ~= nil then
+				return res
 			end
 		end
-		-- custom snippets have higher rank, nil client_id means custom snippets
-		if a.kind and a.kind == CompletionItemKind.Snippet then
-			if not matcha.client_id then
-				if matchb.client_id then
-					return true
-				end
-			elseif not matchb.client_id then
-				return false
-			end
-		end
-
-		-- Sort by lexicographical order of 'sortText'.
-		-- if a.sortText and not b.sortText then
-		-- 	return true
-		-- elseif not a.sortText and b.sortText then
-		-- 	return false
-		-- elseif a.sortText and b.sortText then
-		-- 	local diff = vim.stricmp(a.sortText, b.sortText)
-		-- 	if diff < 0 then
-		-- 		return true
-		-- 	elseif diff > 0 then
-		-- 		return false
-		-- 	end
-		-- end
-
-		-- Sort by length
-		return #(a.filterText or a.label) < #(b.filterText or b.label)
+		return false
 	end)
 
 	return vim.iter(ipairs(matches))
