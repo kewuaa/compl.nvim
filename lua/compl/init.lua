@@ -407,7 +407,7 @@ function M._start_completion()
                     word = snip_body
                 end
             else
-                word = item.insertText or item.label
+                word = item.insertText or vim.tbl_get(item, "textEdit", "newText") or item.label
                 local str_after_cursor = line:sub(col + 1, col + vim.fn.strwidth(word))
                 for i=1,#str_after_cursor do
                     if word:sub(-i) == str_after_cursor:sub(1, i) then
