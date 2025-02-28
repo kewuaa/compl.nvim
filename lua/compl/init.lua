@@ -421,7 +421,7 @@ function M._start_completion()
             local abbr_width = 60
             local abbr = #item.label > abbr_width and item.label:sub(0, abbr_width).."..." or item.label
             return {
-                word = word,
+                word = word:gsub("…", "..."),
                 equal = 1, -- we will do the filtering ourselves
                 abbr = abbr,
                 menu = item.menu,
