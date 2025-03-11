@@ -199,6 +199,17 @@ function M._start_completion()
     end
     M._ctx.cursor = { row, col }
 
+    local cb = vim.schedule_wrap(function()
+        if vim.fn.mode() == "i" then
+            vim.api.nvim_feedkeys(vim.keycode "<C-x><C-u>", "m", false)
+        end
+    end)
+    if not snippet.get(vim.bo.filetype) then
+        snippet.load_vscode_snippet(M._opts.snippet.paths, vim.bo.filetype, cb)
+    else
+        cb()
+    end
+
     -- Make a request to get completion items
     local cancel_fn = vim.lsp.buf_request_all(bufnr, "textDocument/completion", util.position_params, function(responses)
         -- Apply itemDefaults to completion item as per the LSP specs:
@@ -362,12 +373,16 @@ function _G.Compl.completefunc(findstart, base)
         end
     end
     -- if snippet enabled, load snippets
-    if not is_comment and M._opts.snippet.enable and M._opts.snippet.paths and base ~= "" then
-        local items = snippet.load_vscode_snippet(
-            M._opts.snippet.paths,
-            vim.bo.filetype
-        )
-        completion_match(nil, items)
+    if
+        not is_comment
+        and M._opts.snippet.enable
+        and M._opts.snippet.paths
+        and base ~= ""
+    then
+        local items = snippet.get(vim.bo.filetype)
+        if not vim.tbl_isempty(items) then
+            completion_match(nil, items)
+        end
     end
 
     -- Sorting is done with multiple fallbacks.

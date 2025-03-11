@@ -20,9 +20,10 @@ function M.parse_body(completion_item)
 end
 
 
----@param paths string[]
----@param filetype string
-local function load(paths, filetype)
+---@param paths string[] vscode snippet paths
+---@param filetype string filetype
+---@param callback function|nil
+function M.load_vscode_snippet(paths, filetype, callback)
     local parse_snippet_data = function(snippet_data)
         vim.iter(pairs(snippet_data or {})):each(function(_, snippet)
             local prefixes = type(snippet.prefix) == "table" and snippet.prefix or { snippet.prefix }
@@ -40,6 +41,9 @@ local function load(paths, filetype)
                 })
             end)
         end)
+        if callback and type(callback) == "function" then
+            callback()
+        end
     end
 
     cache[filetype] = {}
@@ -67,13 +71,9 @@ local function load(paths, filetype)
 end
 
 
----@param paths string[] vscode snippet paths
----@param filetype string filetype
----@return table[] items snippet items
-function M.load_vscode_snippet(paths, filetype)
-    if not cache[filetype] then
-        load(paths, filetype)
-    end
+---@param filetype string
+---@return table[]
+function M.get(filetype)
     return cache[filetype]
 end
 
