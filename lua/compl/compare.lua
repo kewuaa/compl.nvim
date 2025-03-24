@@ -1,6 +1,30 @@
 local M = {}
 local CompletionItemKind = vim.lsp.protocol.CompletionItemKind
 
+local function sum(nums)
+    local res = 0
+    for _, num in ipairs(nums) do
+        res = res + num
+    end
+    return res
+end
+
+M.position = function(matcha, matchb)
+    local a, b = matcha.item, matchb.item
+    if a.match_pos == nil or b.match_pos == nil then
+        return nil
+    end
+    if #a.match_pos ~= #b.match_pos then
+        return #a.match_pos > #b.match_pos
+    end
+    local offseta = sum(a.match_pos)
+    local offsetb = sum(b.match_pos)
+    if offseta ~= offsetb then
+        return offseta < offsetb
+    end
+    return nil
+end
+
 M.score = function(matcha, matchb)
     local a, b = matcha.item, matchb.item
     if a.match_score ~= b.match_score then

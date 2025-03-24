@@ -13,7 +13,7 @@ M._opts = {
             enable = false,
             max_item_num = 100
         },
-        comparetors = { "score", "kind", "length" }
+        comparetors = { "position", "score", "kind", "length" }
     },
     info = {
         enable = true,
@@ -332,7 +332,7 @@ function _G.Compl.completefunc(findstart, base)
 
         if M._opts.completion.fuzzy then
             ---@diagnostic disable-next-line: param-type-mismatch
-            local matched_items, _, score = unpack(vim.fn.matchfuzzypos(items, base, {
+            local matched_items, pos, score = unpack(vim.fn.matchfuzzypos(items, base, {
                 limit = M._opts.completion.fuzzy.max_item_num,
                 text_cb = function(item)
                     return item.filterText or item.label
@@ -340,6 +340,7 @@ function _G.Compl.completefunc(findstart, base)
             }))
             for i, item in pairs(matched_items) do
                 item.match_score = score[i]
+                item.match_pos = pos[i]
                 table.insert(matches, { client_id = client_id, item = item })
             end
         else
