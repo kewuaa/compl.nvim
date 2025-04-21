@@ -553,7 +553,10 @@ function M._open_info_window(item)
             border = "none",
         }
 
-        table.insert(M._info.winids, vim.api.nvim_open_win(M._info.bufnr, false, win_opts))
+        local ok, winid = pcall(vim.api.nvim_open_win, M._info.bufnr, false, win_opts)
+        if ok then
+            table.insert(M._info.winids, winid)
+        end
     end
 end
 
