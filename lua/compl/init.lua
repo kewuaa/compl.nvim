@@ -172,6 +172,14 @@ function M.setup(opts)
     end
 end
 
+function M.toggle_info()
+    if #M._info.winids > 0 then
+        M._info.close_windows()
+    else
+        M._start_info()
+    end
+end
+
 function M._start_completion()
     M._ctx.cancel_pending()
 
