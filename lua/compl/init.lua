@@ -159,14 +159,16 @@ function M.setup(opts)
         vim.api.nvim_buf_set_name(M._info.bufnr, "Compl:InfoWindow")
         vim.fn.setbufvar(M._info.bufnr, "&buftype", "nofile")
 
-        vim.api.nvim_create_autocmd("CompleteChanged", {
-            group = group,
-            callback = util.debounce(
-                M._info.timer,
-                M._opts.info.timeout,
-                vim.schedule_wrap(M._start_info)
-            ),
-        })
+        if M._opts.info.timeout > 0 then
+            vim.api.nvim_create_autocmd("CompleteChanged", {
+                group = group,
+                callback = util.debounce(
+                    M._info.timer,
+                    M._opts.info.timeout,
+                    vim.schedule_wrap(M._start_info)
+                ),
+            })
+        end
     end
 end
 
