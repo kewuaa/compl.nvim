@@ -645,11 +645,11 @@ function M._on_completedone()
         if not expanded and prev_char ~= "(" and prev_char ~= ")" then
             vim.api.nvim_feedkeys(
                 vim.api.nvim_replace_termcodes(
-                    "()<left>",
+                    "<C-g>U()<C-g>U<left>",
                     true,
                     false,
                     true
-                ), "i", false
+                ), "n", false
             )
         end
     end
