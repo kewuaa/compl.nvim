@@ -66,15 +66,6 @@ function M.accept()
         if idx == -1 then
             keys = "<C-n>" .. keys
         end
-        vim.schedule(function()
-            vim.api.nvim_exec_autocmds(
-                "User",
-                {
-                    pattern = "ComplAccepted",
-                    modeline = false,
-                }
-            )
-        end)
     end
     return keys
 end
@@ -136,10 +127,13 @@ function M.setup(opts)
         ),
     })
 
-    vim.api.nvim_create_autocmd("User", {
-        pattern = "ComplAccepted",
+    vim.api.nvim_create_autocmd("CompleteDone", {
         group = group,
-        callback = M._on_completedone,
+        callback = function()
+            if vim.v.event.reason == "accept" then
+                M._on_completedone()
+            end
+        end
     })
 
     vim.api.nvim_create_autocmd({ "InsertLeavePre", "InsertLeave" }, {
