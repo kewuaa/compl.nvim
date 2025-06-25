@@ -31,8 +31,8 @@ end)()
 function M.debounce(timer, timeout, callback)
     return function(...)
         local argv = { ... }
+        timer:stop()
         timer:start(timeout, 0, function()
-            timer:stop()
             callback(unpack(argv))
         end)
     end
